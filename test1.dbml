@@ -1,0 +1,97 @@
+Project WinterProj {
+  database_type: 'MySQL'
+}
+Table User {
+  id Int [pk]
+  pfp int [ref: - Image.id]
+  Name String
+  password String
+
+  email String
+  Rating Int //calculated by a process periodically based on reviews
+  
+  // Add other user-related fields as needed
+}
+
+Table Listing {
+  id Int [pk]
+  title String
+  images Json
+  location String
+  hostel String
+  suggestedMinimumBid Float
+  description Text
+  amazonLink String
+
+  ownerId Int [ref: > User.id]
+CategoryId Int [ref:<> Category.id]
+}
+
+Table Offer {
+  id Int [pk]
+  amount Float
+  validityDuration Int
+  createdAt DateTime
+  listingId Int [ref: > Listing.id]
+  offererId Int [ref: > User.id]
+  accepted Boolean
+}
+
+Table Conversation {
+  id Int [pk]
+  listingId Int [ref: > Listing.id]
+  senderId Int [ref: > User.id]
+  receiverId Int [ref: > User.id]
+  message Text
+  createdAt DateTime
+}
+
+Table Transaction {
+  id Int [pk]
+  offerId Int [ref: > Offer.id]
+  completed Boolean
+  initiatedAt DateTime
+  completedAt DateTime
+}
+
+Table Category {
+  id Int [pk]
+  name String
+}
+
+Table RatingReview {
+  id Int [pk]
+  rating Int
+  review Text
+  reviewerId Int [ref: > User.id]
+  reviewedUserId Int [ref: > User.id]
+  transactionId Int [ref: > Transaction.id]
+}
+
+Table Notification {
+  id Int [pk]
+  userId Int [ref: > User.id]
+  message Text
+  isRead Boolean
+  createdAt DateTime
+}
+
+Table Report {
+  id Int [pk]
+  reporterId Int [ref: > User.id]
+  reportedUserId Int [ref: > User.id]
+  listingId Int [ref: > Listing.id]
+  message Text
+  resolved Boolean
+}
+
+Table Image {
+  uploaderId Int [ref: > User.id]
+  id Int [pk]
+  path String
+  fileName String
+  
+  createdAt DateTime
+}
+
+
