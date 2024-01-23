@@ -1,0 +1,544 @@
+openapi: 3.0.0
+info:
+  title: CollegeXchange API
+  description: P2P Buy-Sell Platform for College Communities
+  version: 1.0.0
+
+paths:
+  /notifications:
+    get:
+      summary: Get the notifications for a specific user
+      tags: [Notification management]
+      parameters:
+        - name: limit
+          in: query
+          required: true
+          schema:
+            type: integer
+            format: int64
+            description: number of notifs that response should limit to 
+        - name: offset
+          in: query
+          required: true
+          schema:
+            type: integer
+            format: int64
+            description: the offset for query
+      responses:
+        '200':
+          description: Succesful query
+          content:
+            application/json:
+              example:
+                notifications:
+                  - id: 1
+                    type: "Message"
+                    content: "You have a new message from John Doe."
+                    createdAt: "2024-01-23T08:00:00Z"
+                  - id: 2
+                    type: "OfferAccepted"
+                    content: "Your offer on Listing XYZ has been accepted."
+                    createdAt: "2024-01-23T09:30:00Z"
+        '404':
+          description: No notifications found
+          content:
+            application/json:
+              example:
+                error: No notifications found
+      security:
+        - JWT: []
+        
+  /login:
+    post:
+      summary: Log in and obtain JWT token
+      tags: [User management]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/LoginCredentials'
+      responses:
+        '200':
+          description: Successfully logged in
+          content:
+            application/json:
+              example:
+                token: <JWT_TOKEN>
+                name: John Doe
+
+  /register:
+    post:
+      summary: Create a new user account
+      tags: [User management]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/RegisterUser'
+      responses:
+        '201':
+          description: Account created successfully
+          content:
+            application/json:
+              example:
+                token: <JWT_TOKEN>
+                message: Account created successfully
+        '400':
+          description: Bad Request (e.g., invalid input)
+          content:
+            application/json:
+              example:
+                error: Invalid input
+                
+  
+
+  /users/{userId}:
+    delete:
+      summary: Delete user account
+      tags: [User management]
+      parameters:
+        - name: userId
+          in: path
+          required: true
+          schema:
+            type: integer
+            format: int64
+      responses:
+        '200':
+          description: User account deleted successfully
+          content:
+            application/json:
+              example:
+                message: User account deleted successfully
+        '404':
+          description: User not found
+          content:
+            application/json:
+              example:
+                error: User not found
+      security:
+        - JWT: []
+    put:
+      summary: Update user details
+      tags: [User management]
+      parameters:
+        - name: userId
+          in: path
+          required: true
+          schema:
+            type: integer
+            format: int64
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UpdateUser'
+      responses:
+        '200':
+          description: User details updated successfully
+          content:
+            application/json:
+              example:
+                message: User details updated successfully
+        '400':
+          description: Bad Request (e.g., invalid input)
+          content:
+            application/json:
+              example:
+                error: Invalid input
+        '404':
+          description: User not found
+          content:
+            application/json:
+              example:
+                error: User not found
+      security:
+        - JWT: []
+
+  /listings:
+    get:
+      summary: Get listings with filters and paging
+      tags: [Listing management]
+      parameters:
+        - name: category
+          in: query
+          description: Filter by category
+          schema:
+            type: string
+        - name: seller
+          in: query
+          description: Filter by seller (user ID)
+          schema:
+            type: integer
+        - name: price
+          in: query
+          description: Filter by price
+          schema:
+            type: number
+        - name: sortByDate
+          in: query
+          description: Sort by date (true/false)
+          schema:
+            type: boolean
+        - name: sortByMinimumBid
+          in: query
+          description: Sort by minimum bid (true/false)
+          schema:
+            type: boolean
+        - name: limit
+          in: query
+          description: Limit number of results
+          schema:
+            type: integer
+        - name: offset
+          in: query
+          description: Offset for pagination
+          schema:
+            type: integer
+      responses:
+        '200':
+          description: Successful response
+          content:
+            application/json:
+              example:
+                listings:
+                  - id: 1
+                    title: Example Listing
+                    location: Campus XYZ
+                    suggestedMinimumBid: 50.0
+                    owner:
+                      id: 123
+                      name: John Doe
+      security:
+        - JWT: []
+        
+    post:
+      summary: Create a new listing
+      tags: [Listing management]
+      requestBody:
+        required: true
+        content:
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/ListingCreate'
+      responses:
+        '201':
+          description: Listing created successfully
+          content:
+            application/json:
+              example:
+                message: Listing created successfully
+                listingId: 2
+      security:
+        - JWT: []
+
+  /listings/{listingId}:
+    get:
+      summary: Get details for a specific listing
+      tags: [Listing management]
+      parameters:
+        - name: listingId
+          in: path
+          required: true
+          schema:
+            type: integer
+            format: int64
+      responses:
+        '200':
+          description: Successful response
+          content:
+            application/json:
+              example:
+                listing:
+                  id: 1
+                  title: Example Listing
+                  location: Campus XYZ
+                  suggestedMinimumBid: 50.0
+                  owner:
+                    id: 123
+                    name: John Doe
+                offerMadeByUser:
+                  id: 1
+                  amount: 60.0
+                  validityDuration: 7
+                  createdAt: "2024-01-15T12:00:00Z"
+                  offerer:
+                    id: 456
+                    name: Jane Doe
+                    
+    put:
+      summary: Edit an existing listing
+      tags: [Listing management]
+      parameters:
+        - name: listingId
+          in: path
+          required: true
+          schema:
+            type: integer
+            format: int64
+      requestBody:
+        required: true
+        content:
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/ListingCreate'
+      responses:
+        '200':
+          description: Listing edited successfully
+          content:
+            application/json:
+              example:
+                message: Listing edited successfully
+      security:
+        - JWT: []
+
+  /offers/{listingId}:
+    get:
+      summary: Get offers on a specified listing (only accessible by the listing owner)
+      tags: [Listing management]
+      parameters:
+        - name: listingId
+          in: path
+          required: true
+          schema:
+            type: integer
+            format: int64
+      responses:
+        '200':
+          description: Successful response
+          content:
+            application/json:
+              example:
+                offers:
+                  - id: 1
+                    amount: 60.0
+                    validityDuration: 7
+                    createdAt: "2024-01-15T12:00:00Z"
+                    offerer:
+                      id: 456
+                      name: Jane Doe
+      security:
+        - JWT: []
+
+
+  /offers/{offerId}/accept:
+    post:
+      summary: Accept an offer
+      tags: [Offer management]
+      parameters:
+        - name: offerId
+          in: path
+          required: true
+          schema:
+            type: integer
+            format: int64
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/AcceptOffer'
+      responses:
+        '200':
+          description: Offer accepted successfully
+          content:
+            application/json:
+              example:
+                message: Offer accepted successfully
+        '400':
+          description: Bad Request (e.g., invalid input)
+          content:
+            application/json:
+              example:
+                error: Invalid input
+        '404':
+          description: Offer not found
+          content:
+            application/json:
+              example:
+                error: Offer not found
+        '403':
+          description: Forbidden (e.g., user not authorized to accept this offer)
+          content:
+            application/json:
+              example:
+                error: Forbidden
+      security:
+        - JWT: []
+        
+  /users/offers:
+    get:
+      summary: Get all offers made by the user
+      tags: [Offer management]
+      parameters:
+        - name: limit
+          in: query
+          description: Limit number of results
+          schema:
+            type: integer
+        - name: offset
+          in: query
+          description: Offset for pagination
+          schema:
+            type: integer
+      responses:
+        '200':
+          description: Successful response
+          content:
+            application/json:
+              example:
+                offers:
+                 
+                    - id: 1
+                      amount: 60.0
+                      validityDuration: 7
+                      createdAt: "2024-01-15T12:00:00Z"
+                      listing:
+                        id: 2
+                        title: Another Listing
+      security:
+        - JWT: []
+
+  /offers/{offerId}:
+    get:
+      summary: Get details of a specific offer
+      tags: [Offer management]
+      parameters:
+        - name: offerId
+          in: path
+          required: true
+          schema:
+            type: integer
+            format: int64
+      responses:
+        '200':
+          description: Successful response
+          content:
+            application/json:
+              example:
+                offer:
+                  id: 1
+                  amount: 60.0
+                  validityDuration: 7
+                  createdAt: "2024-01-15T12:00:00Z"
+                  listing:
+                    id: 2
+                    title: Another Listing
+                  offerer:
+                    id: 456
+                    name: Jane Doe
+        '404':
+          description: Offer not found
+          content:
+            application/json:
+              example:
+                error: Offer not found
+      security:
+        - JWT: []
+    delete:
+      summary: Delete an offer (only accessible by the offer creator)
+      tags: [Offer management]
+      parameters:
+        - name: offerId
+          in: path
+          required: true
+          schema:
+            type: integer
+            format: int64
+      responses:
+        '200':
+          description: Offer deleted successfully
+          content:
+            application/json:
+              example:
+                message: Offer deleted successfully
+      security:
+        - JWT: []
+
+
+
+
+
+
+
+
+
+components:
+  
+  securitySchemes:
+    JWT:
+      type: http
+      scheme: bearer
+  
+  schemas:
+    UpdateUser:
+      type: object
+      properties:
+        fullName:
+          type: string
+        password:
+          type: string
+        email:
+          type: string
+          format: email
+      required:
+        - email
+        
+    LoginCredentials:
+      type: object
+      properties:
+        email: 
+          type: string
+        password: 
+          type: string
+        
+    RegisterUser:
+      type: object
+      properties:
+        fullName:
+          type: string
+        email:
+          type: string
+          format: email
+        password:
+          type: string
+    AcceptOffer:
+      type: object
+      properties:
+        offerId: 
+          type: integer
+        
+    ListingCreate:
+      type: object
+      properties:
+        title:
+          type: string
+        images:
+          type: array
+          items:
+            type: string
+            format: binary
+          description: Array of image files
+        location:
+          type: string
+        hostel:
+          type: string
+        suggestedMinimumBid:
+          type: number
+        description:
+          type: string
+        amazonLink:
+          type: string
+        categoryId:
+          type: integer
+      required:
+        - title
+        - images
+        - location
+        - suggestedMinimumBid
+        - description
+        - categoryId
+
